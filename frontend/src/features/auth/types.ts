@@ -8,6 +8,6 @@ export type CurrentUser = {
   role: Role;
   verified: boolean;
   doctorProfile: Profile | null;
-  farmacyProfile: Profile | null;
+  pharmacyProfile: Profile | null;
   patientProfile: Profile | null;
 };

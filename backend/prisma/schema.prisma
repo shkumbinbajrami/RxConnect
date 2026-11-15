@@ -11,20 +11,48 @@ datasource db {
 enum Role {
   ADMIN
   DOCTOR
-  FARMACY
+  PHARMACY
   PATIENT
 }
 
+enum VisitStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISCONTINUED
+}
+
+enum PrescriptionStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+  EXPIRED
+}
+
+enum DispenseStatus {
+  COMPLETED
+  REVERSED
+}
+
+enum StockMovementReason {
+  OPENING_BALANCE
+  RECEIPT
+  ADJUSTMENT
+  DISPENSE
+  DISPENSE_REVERSAL
+}
+
 model User {
-  id        String   @id @db.Uuid
-  email     String   @unique
-  role      Role
-  verified  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  doctorProfile  DoctorProfile?
-  farmacyProfile FarmacyProfile?
-  patientProfile PatientProfile?
+  id              String           @id @db.Uuid
+  email           String           @unique
+  role            Role
+  verified        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  doctorProfile   DoctorProfile?
+  pharmacyProfile PharmacyProfile?
+  patientProfile  PatientProfile?
 }
 
 model DoctorProfile {
@@ -34,15 +62,19 @@ model DoctorProfile {
   licenseNumber String? @unique
   workplace     String?
   user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visits        Visit[]
 }
 
-model FarmacyProfile {
-  userId        String  @id @db.Uuid
-  pharmacyName  String?
-  licenseNumber String? @unique
-  address       String?
-  phone         String?
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+model PharmacyProfile {
+  userId         String          @id @db.Uuid
+  pharmacyName   String?
+  licenseNumber  String?         @unique
+  address        String?
+  phone          String?
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock          PharmacyStock[]
+  dispenses      Dispense[]
+  stockMovements StockMovement[]
 }
 
 model PatientProfile {
@@ -51,4 +83,158 @@ model PatientProfile {
   dateOfBirth DateTime? @db.Date
   phone       String?
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visits      Visit[]
+}
+
+model Medicine {
+  id                String             @id @default(uuid()) @db.Uuid
+  name              String
+  strength          String?
+  form              String?
+  unit              String
+  price             Decimal            @db.Decimal(10, 2)
+  currency          String             @db.VarChar(3)
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  stock             PharmacyStock[]
+  prescriptionItems PrescriptionItem[]
+  stockMovements    StockMovement[]
+}
+
+model PharmacyStock {
+  pharmacyId String          @db.Uuid
+  medicineId String          @db.Uuid
+  quantity   Int             @default(0)
+  updatedAt  DateTime        @updatedAt
+  pharmacy   PharmacyProfile @relation(fields: [pharmacyId], references: [userId], onDelete: Cascade)
+  medicine   Medicine        @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+
+  @@id([pharmacyId, medicineId])
+  @@index([medicineId])
+}
+
+model Visit {
+  id            String         @id @default(uuid()) @db.Uuid
+  doctorId      String         @db.Uuid
+  patientId     String         @db.Uuid
+  status        VisitStatus
+  notes         String?
+  scheduledAt   DateTime?
+  startedAt     DateTime?
+  endedAt       DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  doctor        DoctorProfile  @relation(fields: [doctorId], references: [userId], onDelete: Restrict)
+  patient       PatientProfile @relation(fields: [patientId], references: [userId], onDelete: Restrict)
+  prescriptions Prescription[]
+
+  @@index([doctorId, startedAt])
+  @@index([patientId, startedAt])
+}
+
+model Prescription {
+  id           String               @id @default(uuid()) @db.Uuid
+  visitId      String               @db.Uuid
+  status       PrescriptionStatus   @default(DRAFT)
+  issuedAt     DateTime?
+  expiresAt    DateTime?
+  cancelledAt  DateTime?
+  replacesId   String?              @db.Uuid
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  visit        Visit                @relation(fields: [visitId], references: [id], onDelete: Restrict)
+  replaces     Prescription?        @relation("PrescriptionReplacement", fields: [replacesId], references: [id], onDelete: Restrict)
+  replacements Prescription[]       @relation("PrescriptionReplacement")
+  items        PrescriptionItem[]
+  access       PrescriptionAccess[]
+  dispenses    Dispense[]
+
+  @@index([visitId, status])
+  @@index([replacesId])
+}
+
+model PrescriptionItem {
+  id                 String         @id @default(uuid()) @db.Uuid
+  prescriptionId     String         @db.Uuid
+  medicineId         String         @db.Uuid
+  quantity           Int
+  dosageInstructions String
+  medicineName       String
+  strength           String?
+  form               String?
+  unit               String
+  createdAt          DateTime       @default(now())
+  prescription       Prescription   @relation(fields: [prescriptionId], references: [id], onDelete: Restrict)
+  medicine           Medicine       @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+  dispenseItems      DispenseItem[]
+
+  @@unique([prescriptionId, medicineId])
+  @@unique([id, prescriptionId])
+  @@index([medicineId])
+}
+
+model PrescriptionAccess {
+  id                  String       @id @default(uuid()) @db.Uuid
+  prescriptionId      String       @db.Uuid
+  manualCodeHash      String       @unique
+  manualCodeEncrypted String
+  qrTokenHash         String       @unique
+  qrTokenEncrypted    String
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  createdAt           DateTime     @default(now())
+  prescription        Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Restrict)
+
+  @@index([prescriptionId, revokedAt])
+}
+
+model Dispense {
+  id             String          @id @default(uuid()) @db.Uuid
+  prescriptionId String          @db.Uuid
+  pharmacyId     String          @db.Uuid
+  status         DispenseStatus  @default(COMPLETED)
+  dispensedAt    DateTime        @default(now())
+  reversedAt     DateTime?
+  reversalReason String?
+  prescription   Prescription    @relation(fields: [prescriptionId], references: [id], onDelete: Restrict)
+  pharmacy       PharmacyProfile @relation(fields: [pharmacyId], references: [userId], onDelete: Restrict)
+  items          DispenseItem[]
+
+  @@unique([id, prescriptionId])
+  @@index([prescriptionId, dispensedAt])
+  @@index([pharmacyId, dispensedAt])
+}
+
+model DispenseItem {
+  id                 String           @id @default(uuid()) @db.Uuid
+  dispenseId         String           @db.Uuid
+  prescriptionId     String           @db.Uuid
+  prescriptionItemId String           @db.Uuid
+  quantity           Int
+  unitPrice          Decimal          @db.Decimal(10, 2)
+  currency           String           @db.VarChar(3)
+  unit               String
+  dispense           Dispense         @relation(fields: [dispenseId, prescriptionId], references: [id, prescriptionId], onDelete: Restrict)
+  prescriptionItem   PrescriptionItem @relation(fields: [prescriptionItemId, prescriptionId], references: [id, prescriptionId], onDelete: Restrict)
+  stockMovements     StockMovement[]
+
+  @@unique([dispenseId, prescriptionItemId])
+  @@index([prescriptionItemId])
+}
+
+model StockMovement {
+  id             String              @id @default(uuid()) @db.Uuid
+  pharmacyId     String              @db.Uuid
+  medicineId     String              @db.Uuid
+  quantityDelta  Int
+  reason         StockMovementReason
+  dispenseItemId String?             @db.Uuid
+  createdAt      DateTime            @default(now())
+  pharmacy       PharmacyProfile     @relation(fields: [pharmacyId], references: [userId], onDelete: Restrict)
+  medicine       Medicine            @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+  dispenseItem   DispenseItem?       @relation(fields: [dispenseItemId], references: [id], onDelete: Restrict)
+
+  @@index([pharmacyId, medicineId, createdAt])
+  @@index([dispenseItemId])
 }

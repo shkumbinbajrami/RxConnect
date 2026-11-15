@@ -1,17 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, LogOut, Menu, UserRound } from 'lucide-react';
+import { CalendarDays, ClipboardList, LayoutDashboard, LogOut, Menu, Package, Pill, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { BrandMark } from '@/components/atoms/brand-mark';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Role } from '@/lib/roles';
 
-const names: Record<Role, string> = { ADMIN: 'Admin', DOCTOR: 'Doctor', FARMACY: 'Farmacy', PATIENT: 'Patient' };
+const names: Record<Role, string> = { ADMIN: 'Admin', DOCTOR: 'Doctor', PHARMACY: 'Pharmacy', PATIENT: 'Patient' };
+export type WorkspacePageName = 'Overview' | 'Profile' | 'Medicines' | 'Stock' | 'Visits' | 'Prescriptions';
 
 export function DashboardShell({ role, email, page, onLogout, children }: {
-  role: Role; email: string; page: 'Overview' | 'Profile'; onLogout: () => void; children: React.ReactNode;
+  role: Role; email: string; page: WorkspacePageName; onLogout: () => void; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   return <div className="min-h-screen bg-[#f5f8f6] text-slate-900 lg:grid lg:grid-cols-[256px_1fr]">
@@ -21,6 +22,10 @@ export function DashboardShell({ role, email, page, onLogout, children }: {
       <nav className="mt-4 space-y-1" aria-label="Primary navigation">
         <Link href={`/${role.toLowerCase()}`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${page === 'Overview' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}><LayoutDashboard className="size-4" /> Overview</Link>
         <Link href={`/${role.toLowerCase()}/profile`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${page === 'Profile' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}><UserRound className="size-4" /> Profile</Link>
+        {(role === 'DOCTOR' || role === 'PATIENT') && <Link href={`/${role.toLowerCase()}/visits`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${page === 'Visits' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}><CalendarDays className="size-4" /> Visits</Link>}
+        {(role === 'PATIENT' || role === 'PHARMACY') && <Link href={`/${role.toLowerCase()}/prescriptions`} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${page === 'Prescriptions' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}><ClipboardList className="size-4" /> Prescriptions</Link>}
+        {role === 'ADMIN' && <Link href="/admin/medicines" className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${page === 'Medicines' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}><Pill className="size-4" /> Medicines</Link>}
+        {role === 'PHARMACY' && <Link href="/pharmacy/stock" className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${page === 'Stock' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-slate-50'}`}><Package className="size-4" /> Stock</Link>}
       </nav>
       <div className="mt-10 rounded-2xl bg-[#102b27] p-5 text-white">
         <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200">Your workspace</p>

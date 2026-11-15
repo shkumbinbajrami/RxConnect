@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: '/farmacy/:path*', destination: '/pharmacy/:path*', permanent: true }];
+  },
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,

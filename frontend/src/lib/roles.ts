@@ -1,9 +1,9 @@
-export type Role = 'ADMIN' | 'DOCTOR' | 'FARMACY' | 'PATIENT';
+export type Role = 'ADMIN' | 'DOCTOR' | 'PHARMACY' | 'PATIENT';
 
 export const rolePaths: Record<Role, string> = {
   ADMIN: '/admin',
   DOCTOR: '/doctor',
-  FARMACY: '/farmacy',
+  PHARMACY: '/pharmacy',
   PATIENT: '/patient',
 };
 

@@ -1,7 +1,7 @@
 import { Prisma, Role } from '@prisma/client';
 
 type UserWithProfiles = Prisma.UserGetPayload<{
-  include: { doctorProfile: true; farmacyProfile: true; patientProfile: true };
+  include: { doctorProfile: true; pharmacyProfile: true; patientProfile: true };
 }>;
 
 export class UserEntity {
@@ -12,7 +12,7 @@ export class UserEntity {
   createdAt: Date;
   updatedAt: Date;
   doctorProfile: UserWithProfiles['doctorProfile'];
-  farmacyProfile: UserWithProfiles['farmacyProfile'];
+  pharmacyProfile: UserWithProfiles['pharmacyProfile'];
   patientProfile: UserWithProfiles['patientProfile'];
 
   constructor(user: UserWithProfiles) {
@@ -23,7 +23,7 @@ export class UserEntity {
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
     this.doctorProfile = user.doctorProfile;
-    this.farmacyProfile = user.farmacyProfile;
+    this.pharmacyProfile = user.pharmacyProfile;
     this.patientProfile = user.patientProfile;
   }
 }

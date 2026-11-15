@@ -7,7 +7,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserEntity } from './entities/user.entity';
 import { PrismaService } from './prisma.service';
 
-const profiles = { doctorProfile: true, farmacyProfile: true, patientProfile: true } as const;
+const profiles = { doctorProfile: true, pharmacyProfile: true, patientProfile: true } as const;
 
 @Injectable()
 export class AuthService {
@@ -37,7 +37,7 @@ export class AuthService {
           role,
           verified: true,
           ...(role === Role.DOCTOR && { doctorProfile: { create: {} } }),
-          ...(role === Role.FARMACY && { farmacyProfile: { create: {} } }),
+          ...(role === Role.PHARMACY && { pharmacyProfile: { create: {} } }),
           ...(role === Role.PATIENT && { patientProfile: { create: {} } }),
         },
         include: profiles,
@@ -69,7 +69,7 @@ export class AuthService {
 
     const allowed = actor.role === Role.DOCTOR
       ? ['fullName', 'specialty', 'licenseNumber', 'workplace']
-      : actor.role === Role.FARMACY
+      : actor.role === Role.PHARMACY
         ? ['pharmacyName', 'licenseNumber', 'address', 'phone']
         : ['fullName', 'dateOfBirth', 'phone'];
     const submitted = Object.keys(dto).filter((key) => dto[key as keyof UpdateProfileDto] !== undefined);
@@ -91,8 +91,8 @@ export class AuthService {
 
     const data = actor.role === Role.DOCTOR
       ? { doctorProfile: { upsert: { create: normalized, update: normalized } } }
-      : actor.role === Role.FARMACY
-        ? { farmacyProfile: { upsert: { create: normalized, update: normalized } } }
+      : actor.role === Role.PHARMACY
+        ? { pharmacyProfile: { upsert: { create: normalized, update: normalized } } }
         : { patientProfile: { upsert: { create: normalized, update: normalized } } };
     const user = await this.prisma.user.update({ where: { id: actor.id }, data, include: profiles });
     return new UserEntity(user);

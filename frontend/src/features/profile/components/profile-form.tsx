@@ -16,7 +16,7 @@ const fields: Record<Exclude<Role, 'ADMIN'>, { name: string; label: string; type
     { name: 'licenseNumber', label: 'License number' },
     { name: 'workplace', label: 'Workplace' },
   ],
-  FARMACY: [
+  PHARMACY: [
     { name: 'pharmacyName', label: 'Pharmacy name' },
     { name: 'licenseNumber', label: 'License number' },
     { name: 'address', label: 'Address', autoComplete: 'street-address' },

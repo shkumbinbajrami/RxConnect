@@ -28,7 +28,7 @@ export function RegisterForm() {
           const values = new FormData(event.currentTarget);
           register.mutate({ email: String(values.get('email')), password: String(values.get('password')), role });
         }}>
-          <div className="space-y-2"><Label htmlFor="role">I’m joining as</Label><Select value={role} onValueChange={(value) => { if (value) setRole(value as PublicRole); }}><SelectTrigger id="role" className="h-11 w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PATIENT">Patient</SelectItem><SelectItem value="DOCTOR">Doctor</SelectItem><SelectItem value="FARMACY">Farmacy</SelectItem></SelectContent></Select></div>
+          <div className="space-y-2"><Label htmlFor="role">I’m joining as</Label><Select value={role} onValueChange={(value) => { if (value) setRole(value as PublicRole); }}><SelectTrigger id="role" className="h-11 w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PATIENT">Patient</SelectItem><SelectItem value="DOCTOR">Doctor</SelectItem><SelectItem value="PHARMACY">Pharmacy</SelectItem></SelectContent></Select></div>
           <FormField label="Email address" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
           <FormField label="Password" name="password" type="password" autoComplete="new-password" placeholder="Create a password" minLength={8} required hint="At least 8 characters." />
           {register.isError && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{register.error.message}</p>}

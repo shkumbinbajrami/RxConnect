@@ -9,3 +9,18 @@ datasource db {
 }
 
 // Domain models will be added as RxConnect features are implemented.
+enum Role {
+  ADMIN
+  DOCTOR
+  FARMACY
+  PATIENT
+}
+
+model User {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  role      Role
+  verified  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

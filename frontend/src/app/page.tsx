@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Home() {
   const roles = ["Doctors", "Patients", "Pharmacies"];
 
@@ -15,6 +17,8 @@ export default function Home() {
           prescriptions together.
         </p>
         <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-700">
+          <Link href="/register" className="rounded-full bg-emerald-700 px-4 py-2 text-white">Register</Link>
+          <Link href="/login" className="rounded-full bg-slate-900 px-4 py-2 text-white">Log in</Link>
           {roles.map((role) => (
             <span key={role} className="rounded-full bg-emerald-50 px-4 py-2">
               {role}

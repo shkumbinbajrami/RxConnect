@@ -8,7 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Domain models will be added as RxConnect features are implemented.
 enum Role {
   ADMIN
   DOCTOR
@@ -23,4 +22,33 @@ model User {
   verified  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  doctorProfile  DoctorProfile?
+  farmacyProfile FarmacyProfile?
+  patientProfile PatientProfile?
+}
+
+model DoctorProfile {
+  userId        String  @id @db.Uuid
+  fullName      String?
+  specialty     String?
+  licenseNumber String? @unique
+  workplace     String?
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FarmacyProfile {
+  userId        String  @id @db.Uuid
+  pharmacyName  String?
+  licenseNumber String? @unique
+  address       String?
+  phone         String?
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PatientProfile {
+  userId      String    @id @db.Uuid
+  fullName    String?
+  dateOfBirth DateTime? @db.Date
+  phone       String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

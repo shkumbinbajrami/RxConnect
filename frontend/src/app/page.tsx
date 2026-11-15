@@ -1,31 +1,31 @@
 import Link from 'next/link';
+import { ArrowRight, Check, ClipboardPlus, HeartPulse, Pill, ShieldCheck, Stethoscope } from 'lucide-react';
+import { BrandMark } from '@/components/atoms/brand-mark';
+
+const roles = [
+  { icon: HeartPulse, title: 'Patients', text: 'A personal space for your account and care details.' },
+  { icon: Stethoscope, title: 'Doctors', text: 'A dedicated workspace for your professional profile.' },
+  { icon: Pill, title: 'Pharmacies', text: 'A clear home for your pharmacy and account details.' },
+];
 
 export default function Home() {
-  const roles = ["Doctors", "Patients", "Pharmacies"];
-
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
-      <section className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
-        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
-          RxConnect
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-          Prescriptions connected to better care.
-        </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-          A secure place for doctors, patients, and pharmacies to manage trusted
-          prescriptions together.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-slate-700">
-          <Link href="/register" className="rounded-full bg-emerald-700 px-4 py-2 text-white">Register</Link>
-          <Link href="/login" className="rounded-full bg-slate-900 px-4 py-2 text-white">Log in</Link>
-          {roles.map((role) => (
-            <span key={role} className="rounded-full bg-emerald-50 px-4 py-2">
-              {role}
-            </span>
-          ))}
-        </div>
-      </section>
-    </main>
-  );
+  return <main className="min-h-screen bg-[#f7faf8] text-slate-950">
+    <header className="border-b border-slate-200/70"><nav className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-6 lg:px-10" aria-label="Main navigation">
+      <BrandMark />
+      <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex"><a href="#how-it-works" className="hover:text-emerald-700">How it works</a><a href="#who-its-for" className="hover:text-emerald-700">Who it’s for</a></div>
+      <div className="flex items-center gap-3"><Link href="/login" className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:text-emerald-700">Sign in</Link><Link href="/register" className="hidden items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800 sm:inline-flex">Get started <ArrowRight className="size-4" /></Link></div>
+    </nav></header>
+    <section className="relative overflow-hidden"><div className="absolute right-[-15rem] top-[-20rem] size-[52rem] rounded-full bg-emerald-100/60 blur-3xl" aria-hidden="true" /><div className="relative mx-auto grid max-w-7xl items-center gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1fr_0.95fr] lg:gap-20 lg:px-10 lg:pb-32 lg:pt-28">
+      <div><span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-800 shadow-sm"><span className="size-2 rounded-full bg-emerald-600" /> Care, connected</span><h1 className="mt-7 max-w-2xl text-5xl font-semibold leading-[1.08] tracking-[-0.05em] sm:text-6xl lg:text-[4.6rem]">A clearer path from <span className="text-emerald-700">prescription</span> to care.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">RxConnect brings patients, doctors, and pharmacies into one secure care workspace. Start with an account built for your role.</p><div className="mt-9 flex flex-wrap items-center gap-4"><Link href="/register" className="inline-flex items-center gap-3 rounded-xl bg-emerald-700 px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-emerald-900/15 hover:bg-emerald-800">Create your account <ArrowRight className="size-4" /></Link><a href="#how-it-works" className="inline-flex items-center gap-2 px-4 py-4 text-sm font-semibold text-slate-700 hover:text-emerald-700">Explore RxConnect <ArrowRight className="size-4" /></a></div><div className="mt-11 flex flex-wrap gap-x-7 gap-y-3 text-sm text-slate-600"><span className="flex items-center gap-2"><Check className="size-4 text-emerald-700" /> Role-specific workspaces</span><span className="flex items-center gap-2"><Check className="size-4 text-emerald-700" /> Secure sign in</span></div></div>
+      <div className="relative mx-auto w-full max-w-[540px]"><div className="absolute -inset-5 rounded-[2.5rem] border border-emerald-200/70" aria-hidden="true" /><div className="relative overflow-hidden rounded-[2rem] bg-[#102b27] p-6 text-white shadow-2xl shadow-emerald-950/20 sm:p-9"><div className="absolute -right-24 -top-24 size-72 rounded-full border border-white/10" aria-hidden="true" /><div className="relative flex items-center justify-between"><span className="text-sm font-semibold">RxConnect</span><span className="rounded-full bg-white/10 px-3 py-1 text-xs text-emerald-100">Your workspace</span></div><div className="relative mt-14"><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">A connected care journey</p><h2 className="mt-3 max-w-sm text-3xl font-semibold leading-tight tracking-tight">The right space for every part of care.</h2></div><div className="relative mt-9 grid gap-3">{roles.map(({ icon: Icon, title, text }) => <div key={title} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.08] p-4"><span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-200"><Icon className="size-5" /></span><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-emerald-100/60">{text}</p></div></div>)}</div><div className="relative mt-8 flex items-center gap-2 border-t border-white/10 pt-6 text-xs text-emerald-100/70"><ShieldCheck className="size-4 text-emerald-300" /> One place to begin your care journey</div></div></div>
+    </div></section>
+    <section id="how-it-works" className="scroll-mt-8 bg-white py-24"><div className="mx-auto max-w-7xl px-6 lg:px-10"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Simple by design</p><h2 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Get to your workspace in three steps.</h2><p className="mt-5 text-lg leading-8 text-slate-600">Create an account, choose the role that fits you, and find your details in one clear place.</p></div><div className="mt-14 grid gap-5 md:grid-cols-3">{[
+      { number: '01', icon: ClipboardPlus, title: 'Create an account', text: 'Sign up with your email address and choose how you’ll use RxConnect.' },
+      { number: '02', icon: ShieldCheck, title: 'Sign in securely', text: 'Use your account credentials to access your personal workspace.' },
+      { number: '03', icon: HeartPulse, title: 'See your space', text: 'View the profile and account details tailored to your role.' },
+    ].map(({ number, icon: Icon, title, text }) => <article key={number} className="rounded-3xl border border-slate-200 bg-[#f8faf9] p-8"><div className="flex items-start justify-between"><span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><Icon className="size-6" /></span><span className="text-sm font-semibold text-emerald-700/60">{number}</span></div><h3 className="mt-10 text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{text}</p></article>)}</div></div></section>
+    <section id="who-its-for" className="scroll-mt-8 py-24"><div className="mx-auto max-w-7xl px-6 lg:px-10"><div className="flex flex-wrap items-end justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Made for your role</p><h2 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">One connection. Your own workspace.</h2></div><Link href="/register" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900">Get started <ArrowRight className="size-4" /></Link></div><div className="mt-12 grid gap-5 md:grid-cols-3">{roles.map(({ icon: Icon, title, text }) => <article key={title} className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/5"><span className="flex size-14 items-center justify-center rounded-2xl bg-[#e6f3ec] text-emerald-700"><Icon className="size-7" /></span><h3 className="mt-10 text-2xl font-semibold">For {title.toLowerCase()}</h3><p className="mt-4 min-h-16 text-sm leading-7 text-slate-600">{text}</p><Link href="/register" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">Create an account <ArrowRight className="size-4" /></Link></article>)}</div></div></section>
+    <section className="px-6 pb-16 lg:px-10"><div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 rounded-[2rem] bg-[#102b27] px-8 py-12 text-white sm:px-12 lg:flex-row lg:items-center lg:py-16"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Ready to connect?</p><h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">Your care workspace starts here.</h2><p className="mt-4 text-emerald-50/70">Choose your role and create your RxConnect account.</p></div><Link href="/register" className="inline-flex shrink-0 items-center gap-3 rounded-xl bg-white px-6 py-4 text-sm font-semibold text-emerald-900 hover:bg-emerald-50">Get started <ArrowRight className="size-4" /></Link></div></section>
+    <footer className="border-t border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-6 py-8 lg:px-10"><BrandMark /><p className="text-sm text-slate-500">A clearer path from prescription to care.</p><Link href="/login" className="text-sm font-semibold text-emerald-700 hover:underline">Sign in</Link></div></footer>
+  </main>;
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { UserEntity } from '../auth/entities/user.entity';
 import { CurrentUser } from '../common/current-user.decorator';
@@ -7,6 +7,8 @@ import { AddStockDto } from './dto/add-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { PharmacyStockEntity } from './entities/pharmacy-stock.entity';
 import { PharmacyStockService } from './pharmacy-stock.service';
+import { ListStockDto } from './dto/list-stock.dto';
+import { ListResult } from '../common/dto/list-query.dto';
 
 @Controller('pharmacy/stock')
 @RoleGuard(Role.PHARMACY)
@@ -14,8 +16,8 @@ export class PharmacyStockController {
   constructor(private readonly pharmacyStockService: PharmacyStockService) {}
 
   @Get()
-  findAll(@CurrentUser() user: UserEntity): Promise<PharmacyStockEntity[]> {
-    return this.pharmacyStockService.findAll(user.id);
+  findAll(@CurrentUser() user: UserEntity, @Query() query: ListStockDto): Promise<ListResult<PharmacyStockEntity>> {
+    return this.pharmacyStockService.findAll(user.id, query);
   }
 
   @Get(':medicineId')

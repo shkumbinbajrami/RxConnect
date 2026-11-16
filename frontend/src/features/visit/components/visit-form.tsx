@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FormField } from '@/components/molecules/form-field';
+import { DateTimePicker } from '@/components/molecules/date-time-picker';
 import { Feedback } from '@/components/molecules/feedback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +24,7 @@ export function VisitForm({ onSaved, onCancel }: { onSaved: () => void; onCancel
     {lookup.isError && <Feedback message={lookup.error.message} />}{lookupError && <Feedback message={lookupError} />}
     {patient && <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900">Patient: <strong>{patient.fullName || patient.email}</strong> · {patient.email}</p>}
     <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); if (!patient) { setLookupError('Find a patient first.'); return; } const values = new FormData(event.currentTarget); const scheduledAt = String(values.get('scheduledAt') || ''); save.mutate({ patientId: patient.id, ...(scheduledAt && { scheduledAt: new Date(scheduledAt).toISOString() }), notes: String(values.get('notes') || '').trim() }); }}>
-      <div className="grid gap-5 sm:grid-cols-2"><FormField label="Schedule (optional)" name="scheduledAt" type="datetime-local" hint="Leave blank to start the visit now." /><div className="space-y-2"><Label htmlFor="visit-notes">Doctor notes (private)</Label><Input id="visit-notes" name="notes" maxLength={4000} placeholder="Optional visit notes" className="h-11" /></div></div>
+      <div className="grid gap-5 sm:grid-cols-2"><DateTimePicker label="Schedule (optional)" name="scheduledAt" hint="Choose a date and time, or leave the date blank to start now." /><div className="space-y-2"><Label htmlFor="visit-notes">Doctor notes (private)</Label><Input id="visit-notes" name="notes" maxLength={4000} placeholder="Optional visit notes" className="h-11" /></div></div>
       {save.isError && <Feedback message={save.error.message} />}
       <div className="flex gap-3"><Button type="submit" disabled={!patient || save.isPending} className="bg-emerald-700 hover:bg-emerald-800">{save.isPending ? 'Saving…' : 'Create visit'}</Button><Button type="button" variant="outline" onClick={onCancel}>Cancel</Button></div>
     </form>

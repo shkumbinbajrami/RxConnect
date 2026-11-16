@@ -1,8 +1,11 @@
 import { apiRequest } from '@/lib/api-request';
+import { listParams, type Page } from '@/lib/pagination';
 import type { Dispense, PharmacyOption, Prescription, PrescriptionAccess, PrescriptionInput } from './types';
 
 export const prescriptionKeys = { all: ['prescriptions'] as const, list: (userId: string) => ['prescriptions', userId] as const, access: (id: string) => ['prescriptions', id, 'access'] as const, pharmacies: (id: string) => ['prescriptions', id, 'pharmacies'] as const, fills: (id: string) => ['prescriptions', id, 'fills'] as const, pharmacyDispenses: (id: string) => ['pharmacy-dispenses', id] as const };
 export const listPrescriptions = () => apiRequest<Prescription[]>('/prescriptions');
+export const listVisitPrescriptions = (visitId: string) => apiRequest<Prescription[]>(`/prescriptions?visitId=${encodeURIComponent(visitId)}`);
+export const searchPrescriptions = (query: { page: number; limit?: number; search?: string; status?: string; visitId?: string }) => apiRequest<Page<Prescription>>(`/prescriptions?${listParams(query)}`);
 export const createPrescription = (input: PrescriptionInput) => apiRequest<Prescription>('/prescriptions', { method: 'POST', body: JSON.stringify(input) });
 export const updatePrescription = (id: string, items: PrescriptionInput['items']) => apiRequest<Prescription>(`/prescriptions/${id}`, { method: 'PATCH', body: JSON.stringify({ items }) });
 export const issuePrescription = (id: string, expiresAt: string) => apiRequest<Prescription>(`/prescriptions/${id}/issue`, { method: 'POST', body: JSON.stringify({ expiresAt }) });
@@ -14,4 +17,5 @@ export const listFills = (id: string) => apiRequest<Dispense[]>(`/prescriptions/
 export const lookupPrescription = (input: { code?: string; qrToken?: string }) => apiRequest<Prescription>('/prescriptions/lookup', { method: 'POST', body: JSON.stringify(input) });
 export const dispensePrescription = (id: string, input: { code?: string; qrToken?: string; items: { prescriptionItemId: string; quantity: number }[] }) => apiRequest<Dispense>(`/prescriptions/${id}/dispense`, { method: 'POST', body: JSON.stringify(input) });
 export const listPharmacyDispenses = () => apiRequest<Dispense[]>('/prescriptions/dispenses/mine');
+export const searchPharmacyDispenses = (query: { page: number; limit?: number; search?: string; status?: string }) => apiRequest<Page<Dispense>>(`/prescriptions/dispenses/mine?${listParams(query)}`);
 export const reverseDispense = (id: string, reason: string) => apiRequest<Dispense>(`/prescriptions/dispenses/${id}/reverse`, { method: 'POST', body: JSON.stringify({ reason }) });

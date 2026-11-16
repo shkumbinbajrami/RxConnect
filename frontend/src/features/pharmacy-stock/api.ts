@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api-request';
+import { listParams, type Page } from '@/lib/pagination';
 import type { PharmacyStock } from './types';
 
 export const stockKeys = {
@@ -8,6 +9,7 @@ export const stockKeys = {
 export function listStock() {
   return apiRequest<PharmacyStock[]>('/pharmacy/stock');
 }
+export const searchStock = (query: { page: number; limit?: number; search?: string; inStock?: boolean }) => apiRequest<Page<PharmacyStock>>(`/pharmacy/stock?${listParams(query)}`);
 
 export function addStock(input: { medicineId: string; quantity: number }) {
   return apiRequest<PharmacyStock>('/pharmacy/stock', { method: 'POST', body: JSON.stringify(input) });

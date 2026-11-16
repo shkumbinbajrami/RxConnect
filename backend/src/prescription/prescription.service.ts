@@ -10,6 +10,9 @@ import { PrescriptionItemDto } from './dto/prescription-item.dto';
 import { LookupPrescriptionDto } from './dto/lookup-prescription.dto';
 import { DispensePrescriptionDto } from './dto/dispense-prescription.dto';
 import { PrescriptionEntity, PrescriptionRecord } from './entities/prescription.entity';
+import { ListResult, listResult, pagination } from '../common/dto/list-query.dto';
+import { ListPrescriptionsDto } from './dto/list-prescriptions.dto';
+import { ListDispensesDto } from './dto/list-dispenses.dto';
 
 const include = { visit: { include: { patient: true, doctor: true } }, items: { include: { medicine: true } }, dispenses: { include: { items: true } } } as const;
 
@@ -70,9 +73,22 @@ export class PrescriptionService {
     return new PrescriptionEntity(await this.prisma.prescription.create({ data: { visitId: dto.visitId, replacesId: dto.replacesId, items: { create: data } }, include }));
   }
 
-  async findAll(actor: UserEntity): Promise<PrescriptionEntity[]> {
-    const records = await this.prisma.prescription.findMany({ where: { visit: actor.role === Role.DOCTOR ? { doctorId: actor.id } : { patientId: actor.id } }, include, orderBy: { createdAt: 'desc' } });
-    return records.map((record) => new PrescriptionEntity(record));
+  async findAll(actor: UserEntity, query: ListPrescriptionsDto): Promise<ListResult<PrescriptionEntity>> {
+    const search = query.search?.trim();
+    const where: Prisma.PrescriptionWhereInput = {
+      visit: actor.role === Role.DOCTOR ? { doctorId: actor.id } : { patientId: actor.id },
+      ...(query.status && { status: query.status }),
+      ...(query.visitId && { visitId: query.visitId }),
+      ...(search && { OR: [
+        { items: { some: { medicineName: { contains: search, mode: 'insensitive' } } } },
+        { visit: actor.role === Role.DOCTOR
+          ? { patient: { fullName: { contains: search, mode: 'insensitive' } } }
+          : { doctor: { fullName: { contains: search, mode: 'insensitive' } } } },
+      ] }),
+    };
+    const paging = pagination(query);
+    const [records, total] = await Promise.all([this.prisma.prescription.findMany({ where, include, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], ...(paging.enabled && { skip: paging.skip, take: paging.limit }) }), paging.enabled ? this.prisma.prescription.count({ where }) : Promise.resolve(0)]);
+    return listResult(records.map((record) => new PrescriptionEntity(record)), total, query);
   }
   async findOne(actor: UserEntity, id: string): Promise<PrescriptionEntity> { return new PrescriptionEntity(await this.owned(id, actor)); }
 
@@ -146,8 +162,22 @@ export class PrescriptionService {
     return this.prisma.dispense.findMany({ where: { prescriptionId: id }, include: { items: true, pharmacy: { select: { pharmacyName: true, address: true } } }, orderBy: { dispensedAt: 'desc' } });
   }
 
-  async pharmacyDispenses(pharmacyId: string) {
-    return this.prisma.dispense.findMany({ where: { pharmacyId }, include: { items: true, prescription: { select: { id: true, visit: { select: { patient: { select: { fullName: true } } } } } } }, orderBy: { dispensedAt: 'desc' } });
+  async pharmacyDispenses(pharmacyId: string, query: ListDispensesDto) {
+    const search = query.search?.trim();
+    const where: Prisma.DispenseWhereInput = {
+      pharmacyId,
+      ...(query.status && { status: query.status }),
+      ...(search && { prescription: { OR: [
+        { visit: { patient: { fullName: { contains: search, mode: 'insensitive' } } } },
+        { items: { some: { medicineName: { contains: search, mode: 'insensitive' } } } },
+      ] } }),
+    };
+    const paging = pagination(query);
+    const [records, total] = await Promise.all([
+      this.prisma.dispense.findMany({ where, include: { items: true, prescription: { select: { id: true, visit: { select: { patient: { select: { fullName: true } } } } } } }, orderBy: [{ dispensedAt: 'desc' }, { id: 'desc' }], ...(paging.enabled && { skip: paging.skip, take: paging.limit }) }),
+      paging.enabled ? this.prisma.dispense.count({ where }) : Promise.resolve(0),
+    ]);
+    return listResult(records, total, query);
   }
 
   async pharmacies(actor: UserEntity, id: string) {

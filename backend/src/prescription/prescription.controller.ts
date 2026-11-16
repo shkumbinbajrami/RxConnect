@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/current-user.decorator';
 import { RoleGuard } from '../common/role-guard.decorator';
@@ -11,6 +11,9 @@ import { DispensePrescriptionDto } from './dto/dispense-prescription.dto';
 import { ReverseDispenseDto } from './dto/reverse-dispense.dto';
 import { PrescriptionEntity } from './entities/prescription.entity';
 import { PrescriptionService } from './prescription.service';
+import { ListPrescriptionsDto } from './dto/list-prescriptions.dto';
+import { ListDispensesDto } from './dto/list-dispenses.dto';
+import { ListResult } from '../common/dto/list-query.dto';
 
 @Controller('prescriptions')
 export class PrescriptionController {
@@ -22,7 +25,7 @@ export class PrescriptionController {
 
   @Get()
   @RoleGuard(Role.DOCTOR, Role.PATIENT)
-  findAll(@CurrentUser() user: UserEntity): Promise<PrescriptionEntity[]> { return this.prescriptionService.findAll(user); }
+  findAll(@CurrentUser() user: UserEntity, @Query() query: ListPrescriptionsDto): Promise<ListResult<PrescriptionEntity>> { return this.prescriptionService.findAll(user, query); }
 
   @Post('lookup')
   @RoleGuard(Role.PHARMACY)
@@ -30,7 +33,7 @@ export class PrescriptionController {
 
   @Get('dispenses/mine')
   @RoleGuard(Role.PHARMACY)
-  pharmacyDispenses(@CurrentUser() user: UserEntity) { return this.prescriptionService.pharmacyDispenses(user.id); }
+  pharmacyDispenses(@CurrentUser() user: UserEntity, @Query() query: ListDispensesDto) { return this.prescriptionService.pharmacyDispenses(user.id, query); }
 
   @Post('dispenses/:id/reverse')
   @RoleGuard(Role.PHARMACY)

@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api-request';
+import { listParams, type Page } from '@/lib/pagination';
 import type { Medicine, MedicineInput } from './types';
 
 export const medicineKeys = {
@@ -9,6 +10,7 @@ export const medicineKeys = {
 export function listMedicines() {
   return apiRequest<Medicine[]>('/medicine');
 }
+export const searchMedicines = (query: { page: number; limit?: number; search?: string; isActive?: boolean }) => apiRequest<Page<Medicine>>(`/medicine?${listParams(query)}`);
 
 export function createMedicine(input: MedicineInput) {
   return apiRequest<Medicine>('/medicine', { method: 'POST', body: JSON.stringify(input) });

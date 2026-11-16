@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { ListResult, listResult, pagination } from '../common/dto/list-query.dto';
+import { ListStockDto } from './dto/list-stock.dto';
 import { PrismaService } from '../auth/prisma.service';
 import { AddStockDto } from './dto/add-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
@@ -8,13 +11,21 @@ import { PharmacyStockEntity } from './entities/pharmacy-stock.entity';
 export class PharmacyStockService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(pharmacyId: string): Promise<PharmacyStockEntity[]> {
-    const stock = await this.prisma.pharmacyStock.findMany({
-      where: { pharmacyId },
+  async findAll(pharmacyId: string, query: ListStockDto): Promise<ListResult<PharmacyStockEntity>> {
+    const search = query.search?.trim();
+    const where: Prisma.PharmacyStockWhereInput = {
+      pharmacyId,
+      ...(query.inStock !== undefined && { quantity: query.inStock ? { gt: 0 } : 0 }),
+      ...(search && { medicine: { OR: ['name', 'strength', 'form'].map((field) => ({ [field]: { contains: search, mode: 'insensitive' } })) } }),
+    };
+    const paging = pagination(query);
+    const [stock, total] = await Promise.all([this.prisma.pharmacyStock.findMany({
+      where,
       include: { medicine: true },
-      orderBy: { medicine: { name: 'asc' } },
-    });
-    return stock.map((item) => new PharmacyStockEntity(item));
+      orderBy: [{ medicine: { name: 'asc' } }, { medicineId: 'asc' }],
+      ...(paging.enabled && { skip: paging.skip, take: paging.limit }),
+    }), paging.enabled ? this.prisma.pharmacyStock.count({ where }) : Promise.resolve(0)]);
+    return listResult(stock.map((item) => new PharmacyStockEntity(item)), total, query);
   }
 
   async findOne(pharmacyId: string, medicineId: string): Promise<PharmacyStockEntity> {

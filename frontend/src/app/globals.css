@@ -54,18 +54,18 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.51 0.13 165);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.96 0.025 165);
+  --accent-foreground: oklch(0.36 0.09 165);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.58 0.12 165);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -122,9 +122,22 @@
   }
   body {
     @apply bg-background text-foreground;
+    position: relative;
   }
   html {
     @apply font-sans;
     font-family: var(--font-geist-sans), sans-serif;
   }
+}
+
+@media (max-width: 639px) {
+  .data-table { overflow: visible; border: 0; background: transparent; }
+  .data-table table { display: block; min-width: 0; }
+  .data-table thead { display: none; }
+  .data-table tbody { display: grid; gap: 0.75rem; }
+  .data-table tr { display: grid; gap: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; background: white; padding: 1rem; }
+  .data-table td { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0; text-align: right; }
+  .data-table td::before { content: attr(data-label); flex: 0 0 38%; color: #64748b; font-size: 0.75rem; font-weight: 600; text-align: left; text-transform: uppercase; letter-spacing: 0.025em; }
+  .data-table td:last-child { padding-top: 0.75rem; border-top: 1px solid #e2e8f0; }
+  .data-table td:last-child > * { margin-left: auto; }
 }

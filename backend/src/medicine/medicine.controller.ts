@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
@@ -8,6 +8,8 @@ import { CreateMedicineDto } from './dto/create-medicine.dto';
 import { UpdateMedicineDto } from './dto/update-medicine.dto';
 import { MedicineEntity } from './entities/medicine.entity';
 import { MedicineService } from './medicine.service';
+import { ListMedicinesDto } from './dto/list-medicines.dto';
+import { ListResult } from '../common/dto/list-query.dto';
 
 @Controller('medicine')
 export class MedicineController {
@@ -21,8 +23,8 @@ export class MedicineController {
 
   @Get()
   @UseGuards(AuthGuard)
-  findAll(@CurrentUser() user: UserEntity): Promise<MedicineEntity[]> {
-    return this.medicineService.findAll(user);
+  findAll(@CurrentUser() user: UserEntity, @Query() query: ListMedicinesDto): Promise<ListResult<MedicineEntity>> {
+    return this.medicineService.findAll(user, query);
   }
 
   @Get(':id')

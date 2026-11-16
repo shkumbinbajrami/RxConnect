@@ -4,6 +4,8 @@ import { UserEntity } from '../auth/entities/user.entity';
 import { CurrentUser } from '../common/current-user.decorator';
 import { RoleGuard } from '../common/role-guard.decorator';
 import { CreateVisitDto } from './dto/create-visit.dto';
+import { ListVisitsDto } from './dto/list-visits.dto';
+import { ListResult } from '../common/dto/list-query.dto';
 import { UpdateVisitDto } from './dto/update-visit.dto';
 import { VisitEntity } from './entities/visit.entity';
 import { VisitService } from './visit.service';
@@ -20,8 +22,8 @@ export class VisitController {
 
   @Get()
   @RoleGuard(Role.DOCTOR, Role.PATIENT)
-  findAll(@CurrentUser() user: UserEntity): Promise<VisitEntity[]> {
-    return this.visitService.findAll(user);
+  findAll(@CurrentUser() user: UserEntity, @Query() query: ListVisitsDto): Promise<ListResult<VisitEntity>> {
+    return this.visitService.findAll(user, query);
   }
 
   @Get('patients/search')

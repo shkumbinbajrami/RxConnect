@@ -1,5 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Role, VisitStatus } from '@prisma/client';
+import { Prisma, Role, VisitStatus } from '@prisma/client';
+import { ListResult, listResult, pagination } from '../common/dto/list-query.dto';
+import { ListVisitsDto } from './dto/list-visits.dto';
 import { PrismaService } from '../auth/prisma.service';
 import { UserEntity } from '../auth/entities/user.entity';
 import { CreateVisitDto } from './dto/create-visit.dto';
@@ -34,13 +36,24 @@ export class VisitService {
     return new VisitEntity(visit);
   }
 
-  async findAll(actor: UserEntity): Promise<VisitEntity[]> {
-    const visits = await this.prisma.visit.findMany({
-      where: actor.role === Role.DOCTOR ? { doctorId: actor.id } : { patientId: actor.id },
+  async findAll(actor: UserEntity, query: ListVisitsDto): Promise<ListResult<VisitEntity>> {
+    const search = query.search?.trim();
+    const where: Prisma.VisitWhereInput = {
+      ...(actor.role === Role.DOCTOR ? { doctorId: actor.id } : { patientId: actor.id }),
+      ...(query.status && { status: query.status }),
+      ...(query.patientId && { patientId: query.patientId }),
+      ...(search && { OR: actor.role === Role.DOCTOR
+        ? [{ patient: { fullName: { contains: search, mode: 'insensitive' } } }, { notes: { contains: search, mode: 'insensitive' } }]
+        : [{ doctor: { fullName: { contains: search, mode: 'insensitive' } } }] }),
+    };
+    const paging = pagination(query);
+    const [visits, total] = await Promise.all([this.prisma.visit.findMany({
+      where,
       include: people,
-      orderBy: { createdAt: 'desc' },
-    });
-    return visits.map((visit) => new VisitEntity(visit, actor.role === Role.DOCTOR));
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      ...(paging.enabled && { skip: paging.skip, take: paging.limit }),
+    }), paging.enabled ? this.prisma.visit.count({ where }) : Promise.resolve(0)]);
+    return listResult(visits.map((visit) => new VisitEntity(visit, actor.role === Role.DOCTOR)), total, query);
   }
 
   async findOne(actor: UserEntity, id: string): Promise<VisitEntity> {

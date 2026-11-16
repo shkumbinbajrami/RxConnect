@@ -4,6 +4,16 @@ import type { CurrentUser } from '@/features/auth/types';
 
 export type ProfileInput = Record<string, string>;
 
+export async function changePassword(input: { currentPassword: string; newPassword: string; nonce?: string }) {
+  const { error } = await supabase.auth.updateUser({ current_password: input.currentPassword, password: input.newPassword, ...(input.nonce && { nonce: input.nonce }) });
+  if (error) throw error;
+}
+
+export async function requestPasswordReauthentication() {
+  const { error } = await supabase.auth.reauthenticate();
+  if (error) throw error;
+}
+
 export async function updateProfile(input: ProfileInput): Promise<CurrentUser> {
   const token = (await supabase.auth.getSession()).data.session?.access_token;
   if (!token) throw new AuthError('Please sign in again.', 401);

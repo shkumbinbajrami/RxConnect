@@ -1,37 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, RefreshCcw } from 'lucide-react';
+import { useDeferredValue, useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import { WorkspacePage } from '@/components/organisms/workspace-page';
 import { SectionHeading } from '@/components/molecules/section-heading';
 import { Feedback } from '@/components/molecules/feedback';
-import { EmptyState } from '@/components/molecules/empty-state';
+import { PageControls } from '@/components/molecules/page-controls';
 import { Button } from '@/components/ui/button';
-import { FormField } from '@/components/molecules/form-field';
-import { PrescriptionCard } from '@/features/prescription/components/prescription-card';
-import { PrescriptionForm } from '@/features/prescription/components/prescription-form';
-import { cancelPrescription, deletePrescription, issuePrescription, listPrescriptions, prescriptionKeys } from '@/features/prescription/api';
-import type { Prescription } from '@/features/prescription/types';
-import type { Visit } from '../types';
-import { listVisits, visitKeys } from '../api';
+import { TableFilters } from '@/components/molecules/table-filters';
+import { searchVisits, visitKeys } from '../api';
+import type { VisitStatus } from '../types';
 import { VisitForm } from './visit-form';
 import { VisitList } from './visit-list';
 
 function DoctorVisitsContent({ userId }: { userId: string }) {
-  const client = useQueryClient();
-  const visits = useQuery({ queryKey: visitKeys.list(userId), queryFn: listVisits });
-  const prescriptions = useQuery({ queryKey: prescriptionKeys.list(userId), queryFn: listPrescriptions });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<VisitStatus | ''>('');
+  const deferredSearch = useDeferredValue(search);
+  const visits = useQuery({ queryKey: [...visitKeys.list(userId), page, limit, deferredSearch, status], queryFn: () => searchVisits({ page, limit, search: deferredSearch, status }), placeholderData: keepPreviousData });
   const [addingVisit, setAddingVisit] = useState(false);
-  const [prescribing, setPrescribing] = useState<Visit | null>(null);
-  const [editing, setEditing] = useState<Prescription | null>(null);
-  const [issuing, setIssuing] = useState<string | null>(null);
-  const action = useMutation({ mutationFn: async (input: { kind: 'issue' | 'cancel' | 'delete'; id: string; expiresAt?: string }) => input.kind === 'issue' ? issuePrescription(input.id, input.expiresAt!) : input.kind === 'cancel' ? cancelPrescription(input.id) : deletePrescription(input.id), onSuccess: () => { setIssuing(null); void client.invalidateQueries({ queryKey: prescriptionKeys.all }); } });
-  return <div className="space-y-8"><SectionHeading eyebrow="Doctor workspace" title="Visits & prescriptions" description="Manage your patient visits and issue prescriptions from the shared medicine catalog." action={<Button onClick={() => setAddingVisit(true)} className="bg-emerald-700 hover:bg-emerald-800"><Plus className="size-4" /> New visit</Button>} />
+  return <div className="space-y-8"><SectionHeading eyebrow="Doctor workspace" title="Visits" description="Manage patient visits and care notes." action={<Button onClick={() => setAddingVisit(true)} className="bg-emerald-700 hover:bg-emerald-800"><Plus className="size-4" /> New visit</Button>} />
     {addingVisit && <VisitForm onSaved={() => setAddingVisit(false)} onCancel={() => setAddingVisit(false)} />}
-    <section className="space-y-4"><div className="flex items-center justify-between"><h2 className="text-xl font-semibold">Visits</h2><Button variant="outline" size="sm" onClick={() => void visits.refetch()} disabled={visits.isFetching}><RefreshCcw className="size-4" /> Refresh</Button></div>{visits.isPending ? <p className="text-sm text-slate-500">Loading visits…</p> : visits.isError ? <Feedback message={visits.error.message} /> : <VisitList visits={visits.data} role="DOCTOR" onPrescribe={(visit) => { setPrescribing(visit); setEditing(null); }} />}</section>
-    {prescribing && <section id="prescription-form"><PrescriptionForm visitId={prescribing.id} onSaved={() => setPrescribing(null)} onCancel={() => setPrescribing(null)} /></section>}
-    <section className="space-y-4"><h2 className="text-xl font-semibold">Prescriptions</h2>{prescriptions.isPending ? <p className="text-sm text-slate-500">Loading prescriptions…</p> : prescriptions.isError ? <Feedback message={prescriptions.error.message} /> : prescriptions.data.length === 0 ? <EmptyState title="No prescriptions yet" description="Open an in-progress visit to write a prescription." /> : prescriptions.data.map((prescription) => <div key={prescription.id} className="space-y-3"><PrescriptionCard prescription={prescription}><div className="flex flex-wrap gap-2">{prescription.status === 'DRAFT' && <><Button size="sm" variant="outline" onClick={() => { setEditing(prescription); setPrescribing(null); }}>Edit draft</Button><Button size="sm" onClick={() => setIssuing(prescription.id)}>Issue</Button><Button size="sm" variant="outline" disabled={action.isPending} onClick={() => { if (window.confirm('Delete this draft prescription?')) action.mutate({ kind: 'delete', id: prescription.id }); }}>Delete draft</Button></>}{prescription.status === 'ISSUED' && <Button size="sm" variant="outline" disabled={action.isPending} onClick={() => { if (window.confirm('Cancel this prescription? The patient can no longer use its code.')) action.mutate({ kind: 'cancel', id: prescription.id }); }}>Cancel prescription</Button>}</div>{issuing === prescription.id && <form className="flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); const value = String(new FormData(event.currentTarget).get('expiresAt')); action.mutate({ kind: 'issue', id: prescription.id, expiresAt: new Date(value).toISOString() }); }}><FormField label="Prescription expires" name="expiresAt" type="datetime-local" required /><Button type="submit" disabled={action.isPending}>Confirm issue</Button><Button type="button" variant="outline" onClick={() => setIssuing(null)}>Cancel</Button></form>}{action.isError && <Feedback message={action.error.message} />}</PrescriptionCard>{editing?.id === prescription.id && <PrescriptionForm visitId={prescription.visitId} draft={prescription} onSaved={() => setEditing(null)} onCancel={() => setEditing(null)} />}</div>)}</section>
+    <section className="space-y-4"><TableFilters loading={visits.isFetching} search={search} onSearchChange={(value) => { setSearch(value); setPage(1); }} searchLabel="Search visits" searchPlaceholder="Search patient or notes" filterId="visit-status" filterLabel="Filter visit status" filterValue={status} filterOptions={[{ value: '', label: 'All statuses' }, ...(['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'DISCONTINUED'] as const).map((value) => ({ value, label: value.replaceAll('_', ' ') }))]} onFilterChange={(value) => { setStatus(value as VisitStatus | ''); setPage(1); }} />{visits.isPending ? <p className="text-sm text-slate-500">Loading visits…</p> : visits.isError ? <Feedback message={visits.error.message} /> : <><VisitList visits={visits.data.items} role="DOCTOR" filtered={Boolean(search || status)} /><PageControls page={visits.data.page} totalPages={visits.data.totalPages} total={visits.data.total} limit={limit} onPageChange={setPage} onLimitChange={(next) => { setLimit(next); setPage(1); }} /></>}</section>
   </div>;
 }
 

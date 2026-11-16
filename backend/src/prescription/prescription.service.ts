@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, PrescriptionStatus, Role, VisitStatus } from '@prisma/client';
-import { createCipheriv, createDecipheriv, createHmac, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../auth/prisma.service';
 import { UserEntity } from '../auth/entities/user.entity';
@@ -18,8 +18,15 @@ export class PrescriptionService {
   private readonly key: Buffer;
 
   constructor(private readonly prisma: PrismaService) {
-    this.key = Buffer.from(process.env.PRESCRIPTION_ACCESS_KEY || '', 'base64');
-    if (this.key.length !== 32) throw new Error('PRESCRIPTION_ACCESS_KEY must be a base64 encoded 32-byte key');
+    const dedicatedKey = process.env.PRESCRIPTION_ACCESS_KEY;
+    if (dedicatedKey) {
+      this.key = Buffer.from(dedicatedKey, 'base64');
+      if (this.key.length !== 32) throw new Error('PRESCRIPTION_ACCESS_KEY must be a base64 encoded 32-byte key');
+    } else {
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceKey) throw new Error('Set PRESCRIPTION_ACCESS_KEY or SUPABASE_SERVICE_ROLE_KEY');
+      this.key = createHash('sha256').update('rxconnect-prescription-access-v1\0').update(serviceKey).digest();
+    }
   }
 
   private hash(value: string): string { return createHmac('sha256', this.key).update(value).digest('hex'); }
